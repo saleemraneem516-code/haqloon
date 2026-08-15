@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign in — HAQLOON</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <div class="instrument-screen">
+    <div class="auth-card card">
+      <div class="radar">
+        <div class="radar-sweep"></div>
+        <div class="radar-core"></div>
+        <div class="radar-blip" style="top: 38%; left: 68%; animation-delay: 0.4s;"></div>
+        <div class="radar-blip" style="top: 62%; left: 32%; animation-delay: 1.6s;"></div>
+        <div class="radar-blip" style="top: 25%; left: 40%; animation-delay: 2.4s;"></div>
+      </div>
+
+      <div class="eyebrow" style="justify-content:center;">Access Terminal</div>
+      <div class="auth-title">HAQLOON</div>
+      <div class="auth-sub">Sign in to reach mission control</div>
+
+      {% if error %}
+      <div class="alert alert-error">{{ error }}</div>
+      {% endif %}
+
+      <form method="post" action="/login" autocomplete="off">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+        <div class="field">
+          <label for="username">Username</label>
+          <input id="username" name="username" type="text" value="{{ username or '' }}" required autofocus />
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" required />
+        </div>
+        <button class="btn btn-primary" type="submit">Sign In</button>
+      </form>
+
+  
+      </div>
+    </div>
+  </div>
+</body>
+</html>

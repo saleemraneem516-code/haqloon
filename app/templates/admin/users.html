@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Manage Users — HAQLOON{% endblock %}
+{% block page_heading %}User Management{% endblock %}
+{% block page_sub %}Add, edit, disable, or remove accounts{% endblock %}
+
+{% block content %}
+{% if reset_username %}
+<div class="alert alert-success">
+  Password reset for <strong>{{ reset_username }}</strong>. Temporary password:
+  <span class="mono">{{ reset_password_value }}</span> — share this securely and ask them to change it after signing in.
+</div>
+{% endif %}
+
+<div class="panel-title-row">
+  <form class="search-bar" method="get" action="/admin/users" style="flex:1; max-width:360px;">
+    <input type="text" name="q" placeholder="Search name, username or email…" value="{{ q }}" />
+  </form>
+  <a class="btn btn-primary btn-sm" href="/admin/users/add">+ Add User</a>
+</div>
+
+<div class="card">
+  {% if users %}
+  <table>
+    <thead>
+      <tr><th>User</th><th>Email</th><th>Role</th><th>Status</th><th>Last Login</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for u in users %}
+      <tr>
+        <td class="table-user">
+          <img class="avatar" src="{{ u.profile_picture }}" alt="">
+          <div>
+            <div>{{ u.full_name }}</div>
+            <div class="mono" style="color:var(--fog); font-size:12px;">@{{ u.username }}</div>
+          </div>
+        </td>
+        <td>{{ u.email }}</td>
+        <td><span class="badge {% if u.is_admin %}badge-admin{% else %}badge-employee{% endif %}">{{ u.role }}</span></td>
+        <td><span class="badge {% if u.is_active %}badge-active{% else %}badge-disabled{% endif %}">{{ u.status_label }}</span></td>
+        <td class="mono">{{ u.last_login.strftime('%Y-%m-%d %H:%M') if u.last_login else '—' }}</td>
+        <td>
+          <div class="row-actions">
+            <a class="btn btn-ghost btn-sm" href="/admin/users/edit/{{ u.id }}">Edit</a>
+
+            <form class="inline-form" method="post" action="/admin/users/toggle-status/{{ u.id }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+              <button class="btn btn-ghost btn-sm" type="submit" {% if u.id == user.id %}disabled title="You can't disable your own account"{% endif %}>
+                {{ 'Disable' if u.is_active else 'Enable' }}
+              </button>
+            </form>
+
+            <form class="inline-form" method="post" action="/admin/users/reset-password/{{ u.id }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+              <button class="btn btn-ghost btn-sm" type="submit">Reset PW</button>
+            </form>
+
+            <form class="inline-form" method="post" action="/admin/users/delete/{{ u.id }}"
+                  onsubmit="return confirm('Delete {{ u.username }}? This cannot be undone.');">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+              <button class="btn btn-danger btn-sm" type="submit" {% if u.id == user.id %}disabled title="You can't delete your own account"{% endif %}>Delete</button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty-state">
+    <h3>No users found</h3>
+    <p>Try a different search, or add a new user.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

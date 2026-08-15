@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Welcome — HAQLOON</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <div class="instrument-screen">
+    <div class="auth-card card">
+      <div class="radar">
+        <div class="radar-sweep"></div>
+        <div class="radar-core"></div>
+        <div class="radar-blip" style="top: 30%; left: 62%; animation-delay: 0.2s;"></div>
+        <div class="radar-blip" style="top: 66%; left: 44%; animation-delay: 1.2s;"></div>
+      </div>
+
+      <div class="eyebrow" style="justify-content:center;">Link Established</div>
+      <div class="auth-title">Welcome, {{ user.full_name }}</div>
+      <div class="auth-sub">Signed in as <span class="mono">{{ user.username }}</span> &middot; {{ user.role }}</div>
+
+      <div class="countdown-row">
+        <svg class="countdown-ring" viewBox="0 0 20 20">
+          <circle class="track" cx="10" cy="10" r="9" />
+          <circle class="progress" cx="10" cy="10" r="9" />
+        </svg>
+        <span>Entering dashboard in <span id="count">3</span>s</span>
+      </div>
+
+      <a class="btn btn-primary" href="/dashboard">Enter Dashboard</a>
+    </div>
+  </div>
+
+  <script>
+    let seconds = 3;
+    const counter = document.getElementById("count");
+    const timer = setInterval(() => {
+      seconds -= 1;
+      if (counter) counter.textContent = Math.max(seconds, 0);
+      if (seconds <= 0) {
+        clearInterval(timer);
+        window.location.href = "/dashboard";
+      }
+    }, 1000);
+  </script>
+</body>
+</html>

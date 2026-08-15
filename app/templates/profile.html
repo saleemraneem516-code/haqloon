@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Profile — HAQLOON{% endblock %}
+{% block page_heading %}My Profile{% endblock %}
+{% block page_sub %}Manage your account details{% endblock %}
+
+{% block content %}
+<div style="max-width: 560px;">
+
+  {% if error %}<div class="alert alert-error">{{ error }}</div>{% endif %}
+  {% if success %}<div class="alert alert-success">{{ success }}</div>{% endif %}
+
+  <div class="card" style="margin-bottom:20px;">
+    <div class="panel-title-row">
+      <h3>Account</h3>
+      <span class="badge {% if user.is_admin %}badge-admin{% else %}badge-employee{% endif %}">{{ user.role }}</span>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:16px; margin-bottom: 20px;">
+      <img class="avatar" style="width:64px; height:64px;" src="{{ user.profile_picture }}" alt="">
+      <div>
+        <div style="font-weight:600;">{{ user.full_name }}</div>
+        <div style="color:var(--fog); font-size:13px;">{{ user.email }}</div>
+        <div class="field-hint">Last login: {{ user.last_login.strftime('%Y-%m-%d %H:%M') if user.last_login else 'This is your first session' }}</div>
+      </div>
+    </div>
+
+    <form method="post" action="/profile/update" enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+
+      <div class="field">
+        <label for="full_name">Full Name</label>
+        <input id="full_name" name="full_name" type="text" value="{{ user.full_name }}" required />
+      </div>
+
+      <div class="field">
+        <label for="username">Username</label>
+        <input id="username" name="username" type="text" value="{{ user.username }}" required />
+      </div>
+
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" value="{{ user.email }}" required />
+      </div>
+
+      <div class="field">
+        <label for="profile_picture">Profile Picture</label>
+        <input id="profile_picture" name="profile_picture" type="file" accept="image/*" />
+        <div class="field-hint">PNG, JPEG, WEBP or GIF, up to 3 MB.</div>
+      </div>
+
+      <div class="field">
+        <label for="new_password">New Password <span style="color:var(--fog-dim);">(leave blank to keep current)</span></label>
+        <input id="new_password" name="new_password" type="password" />
+        <div class="field-hint">At least 8 characters, with letters and numbers.</div>
+      </div>
+
+      <div class="field">
+        <label for="current_password">Current Password <span style="color:var(--fog-dim);">(required to save changes)</span></label>
+        <input id="current_password" name="current_password" type="password" required />
+      </div>
+
+      <button class="btn btn-primary" type="submit">Save Changes</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

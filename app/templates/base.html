@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}HAQLOON{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark"></div>
+        <div>
+          <div class="brand-name">HAQLOON</div>
+          <div class="brand-tag">Control System</div>
+        </div>
+      </div>
+
+      <nav>
+        <div class="nav-group">
+          <div class="nav-group-label">Operations</div>
+          <a class="nav-link {% if active == 'dashboard' %}active{% endif %}" href="/dashboard"><span class="dot"></span>Dashboard</a>
+          <a class="nav-link {% if active == 'sensors' %}active{% endif %}" href="/sensors"><span class="dot"></span>Sensor Data</a>
+          <a class="nav-link {% if active == 'camera' %}active{% endif %}" href="/camera"><span class="dot"></span>Camera</a>
+          <a class="nav-link {% if active == 'gps' %}active{% endif %}" href="/gps"><span class="dot"></span>GPS</a>
+          <a class="nav-link {% if active == 'ai-detection' %}active{% endif %}" href="/ai-detection"><span class="dot"></span>AI Detection</a>
+          <a class="nav-link {% if active == 'rover' %}active{% endif %}" href="/rover"><span class="dot"></span>Rover Controls</a>
+          <a class="nav-link {% if active == 'lidar' %}active{% endif %}" href="/lidar"><span class="dot"></span>LiDAR Map</a>        </div>
+
+        <div class="nav-group">
+          <div class="nav-group-label">Alerts</div>
+          <a class="nav-link {% if active == 'notifications' %}active{% endif %}" href="/notifications"><span class="dot"></span>Notifications</a>
+          <a class="nav-link {% if active == 'alerts' %}active{% endif %}" href="/alerts"><span class="dot"></span>Alerts History</a>
+        </div>
+
+        {% if user and user.is_admin %}
+        <div class="nav-group">
+          <div class="nav-group-label">Administration</div>
+          <a class="nav-link {% if active == 'admin' %}active{% endif %}" href="/admin"><span class="dot"></span>Admin Panel</a>
+        </div>
+        {% endif %}
+
+        <div class="nav-group">
+          <div class="nav-group-label">Account</div>
+          <a class="nav-link {% if active == 'profile' %}active{% endif %}" href="/profile"><span class="dot"></span>Profile</a>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <a class="logout-link" href="/logout">&#10140; Logout</a>
+      </div>
+    </aside>
+
+    <div class="main">
+      <div class="topbar">
+        <div>
+          <div class="page-heading">{% block page_heading %}{% endblock %}</div>
+          <div class="page-sub">{% block page_sub %}{% endblock %}</div>
+        </div>
+
+        {% if user %}
+        <div class="profile-menu">
+          <button class="profile-trigger" id="profile-trigger" type="button">
+            <img class="avatar" src="{{ user.profile_picture }}" alt="">
+            <span style="text-align:left;">
+              <span class="profile-name" style="display:block;">{{ user.full_name }}</span>
+              <span class="profile-role">{{ user.role }}</span>
+            </span>
+          </button>
+          <div class="profile-dropdown" id="profile-dropdown">
+            <a class="item" href="/profile">&#9881;&#65039; Edit Profile</a>
+            {% if user.is_admin %}
+            <a class="item" href="/admin">&#128737;&#65039; Admin Panel</a>
+            {% endif %}
+            <div class="divider"></div>
+            <a class="item danger" href="/logout">&#10140; Logout</a>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="content">
+        {% block content %}{% endblock %}
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/js/main.js"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}
+GPS Tracking
+{% endblock %}
+
+{% block page_heading %}
+GPS Tracking
+{% endblock %}
+
+{% block page_sub %}
+Live GPS location and rover path
+{% endblock %}
+
+{% block content %}
+
+<div class="stat-card">
+
+    <h2>
+        Rover GPS Location
+    </h2>
+
+    <p>
+        Latitude:
+        <span id="latitude">--</span>
+    </p>
+
+    <p>
+        Longitude:
+        <span id="longitude">--</span>
+    </p>
+
+    <p>
+        Status:
+        <span id="gps-status">
+            Waiting...
+        </span>
+    </p>
+
+</div>
+
+
+<script>
+
+async function loadGPS(){
+
+    const response = await fetch("/api/gps");
+
+    const data = await response.json();
+
+
+    document.getElementById("latitude").innerHTML =
+        data.latitude ?? "--";
+
+
+    document.getElementById("longitude").innerHTML =
+        data.longitude ?? "--";
+
+
+    document.getElementById("gps-status").innerHTML =
+        "Online";
+
+}
+
+
+setInterval(loadGPS,5000);
+
+loadGPS();
+
+</script>
+
+
+{% endblock %}

@@ -1,0 +1,709 @@
+{% extends "base.html" %}
+
+
+{% block title %}
+Dashboard — HAQLOON
+{% endblock %}
+
+
+{% block page_heading %}
+Dashboard
+{% endblock %}
+
+
+{% block page_sub %}
+Live overview of the HAQLOON platform
+{% endblock %}
+
+
+
+{% block content %}
+
+
+<div class="stat-grid">
+
+
+<div class="stat-card">
+<div class="stat-label">
+Session Role
+</div>
+
+<div class="stat-value signal">
+{{ user.role|capitalize }}
+</div>
+
+</div>
+
+
+
+<div class="stat-card">
+
+<div class="stat-label">
+Account Status
+</div>
+
+<div class="stat-value">
+{{ user.status_label }}
+</div>
+
+</div>
+
+
+
+<div class="stat-card">
+
+<div class="stat-label">
+Last Login
+</div>
+
+<div class="stat-value mono">
+
+{{ user.last_login.strftime('%Y-%m-%d %H:%M')
+if user.last_login else '—' }}
+
+</div>
+
+</div>
+
+
+</div>
+
+
+
+
+
+<!-- Hardware Status -->
+
+<div class="card">
+
+
+<div class="panel-title-row">
+
+<h3>
+HAQLOON Rover Hardware Status
+</h3>
+
+</div>
+
+
+
+
+<div class="stat-grid">
+
+
+
+<div class="stat-card">
+
+<div class="stat-label">
+Raspberry Pi Status
+</div>
+
+
+<div class="stat-value" id="pi_status">
+🔴 Offline
+</div>
+
+
+</div>
+
+
+
+
+
+<div class="stat-card">
+
+<div class="stat-label">
+Rover Connection
+</div>
+
+
+<div class="stat-value" id="rover_status">
+🔴 Disconnected
+</div>
+
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+
+
+<h3 style="margin-top:25px;">
+Sensors Status
+</h3>
+
+
+
+
+
+<div class="stat-grid">
+
+
+
+<div class="stat-card">
+
+<div class="stat-label">
+Ultrasonic Sensor
+</div>
+
+<div class="stat-value signal" id="ultrasonic_status">
+🔴 Offline
+</div>
+
+<div class="stat-value" id="ultrasonic_value">
+-- cm
+</div>
+
+
+</div>
+
+
+
+
+
+<div class="stat-card">
+
+<div class="stat-label">
+DHT11 Temperature
+</div>
+
+
+<div class="stat-value signal" id="temperature_status">
+🔴 Offline
+</div>
+
+<div class="stat-value" id="temperature_value">
+-- °C
+</div>
+
+
+</div>
+
+
+
+
+
+<div class="stat-card">
+
+<div class="stat-label">
+Humidity
+</div>
+
+
+<div class="stat-value signal" id="humidity_status">
+🔴 Offline
+</div>
+
+
+<div class="stat-value" id="humidity_value">
+-- %
+</div>
+
+
+</div>
+
+
+
+
+
+
+
+<div class="stat-card">
+
+<div class="stat-label">
+RPLIDAR A1
+</div>
+
+
+<div class="stat-value signal" id="lidar_status">
+🔴 Offline
+</div>
+
+
+<div class="stat-value" id="lidar_value">
+-- mm
+</div>
+
+
+</div>
+
+
+
+
+
+
+
+<div class="stat-card">
+
+<div class="stat-label">
+GPS Neo 6M
+</div>
+
+
+<div class="stat-value signal" id="gps_status">
+🔴 Offline
+</div>
+
+
+<div class="stat-value" id="gps_value">
+No GPS
+</div>
+
+
+</div>
+
+
+
+
+
+
+
+<div class="stat-card">
+
+<div class="stat-label">
+Camera IMX219
+</div>
+
+
+<div class="stat-value signal" id="camera_status">
+🔴 Offline
+</div>
+
+
+<div class="stat-value" id="camera_value">
+No Image
+</div>
+
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+<br>
+
+
+<a class="btn btn-ghost" href="/sensors">
+Sensor Data
+</a>
+
+
+<a class="btn btn-ghost" href="/camera">
+Camera Feed
+</a>
+
+
+<a class="btn btn-ghost" href="/gps">
+GPS Tracking
+</a>
+
+
+<a class="btn btn-ghost" href="/ai-detection">
+AI Detection
+</a>
+
+
+<a class="btn btn-ghost" href="/rover">
+Rover Controls
+</a>
+
+
+<a class="btn btn-ghost" href="/notifications">
+Notifications
+</a>
+
+
+
+
+{% if user.is_admin %}
+
+<a class="btn btn-ghost" href="/admin">
+Admin Panel
+</a>
+
+{% endif %}
+
+
+
+
+</div>
+
+
+<script>
+
+const protocol =
+    window.location.protocol === "https:"
+    ? "wss://"
+    : "ws://";
+
+
+const socket = new WebSocket(
+    protocol +
+    window.location.host +
+    "/api/rover/ws"
+);
+
+
+
+socket.onopen = () => {
+
+    console.log(
+        "HAQLOON WebSocket Connected"
+    );
+
+};
+
+
+
+
+socket.onmessage = (event) => {
+
+
+    const data = JSON.parse(
+        event.data
+    );
+
+
+    console.log(
+        "LIVE DATA:",
+        data
+    );
+
+
+
+    // =======================
+    // Raspberry Pi
+    // =======================
+
+    document.getElementById(
+        "pi_status"
+    ).innerHTML =
+        data.raspberry_pi === "Online"
+        ? "🟢 Online"
+        : "🔴 Offline";
+
+
+
+
+    // =======================
+    // Rover
+    // =======================
+
+    document.getElementById(
+        "rover_status"
+    ).innerHTML =
+        data.rover_status === "Connected"
+        ? "🟢 Connected"
+        : "🔴 Disconnected";
+
+
+
+
+    // =======================
+    // Temperature
+    // =======================
+
+    if(
+        data.sensors &&
+        data.sensors.temperature !== null &&
+        data.sensors.temperature !== "Offline"
+    ){
+
+        document.getElementById(
+            "temperature_status"
+        ).innerHTML =
+            "🟢 Online";
+
+
+        document.getElementById(
+            "temperature_value"
+        ).innerHTML =
+            data.sensors.temperature + " °C";
+
+    }
+    else{
+
+        document.getElementById(
+            "temperature_status"
+        ).innerHTML =
+            "🔴 Offline";
+
+
+        document.getElementById(
+            "temperature_value"
+        ).innerHTML =
+            "-- °C";
+
+    }
+
+
+
+
+    // =======================
+    // Humidity
+    // =======================
+
+    if(
+        data.sensors &&
+        data.sensors.humidity !== null &&
+        data.sensors.humidity !== "Offline"
+    ){
+
+        document.getElementById(
+            "humidity_status"
+        ).innerHTML =
+            "🟢 Online";
+
+
+        document.getElementById(
+            "humidity_value"
+        ).innerHTML =
+            data.sensors.humidity + " %";
+
+    }
+    else{
+
+        document.getElementById(
+            "humidity_status"
+        ).innerHTML =
+            "🔴 Offline";
+
+
+        document.getElementById(
+            "humidity_value"
+        ).innerHTML =
+            "-- %";
+
+    }
+
+
+
+
+    // =======================
+    // Ultrasonic
+    // =======================
+
+    if(
+        data.sensors &&
+        data.sensors.distance !== null &&
+        data.sensors.distance !== "Offline"
+    ){
+
+        document.getElementById(
+            "ultrasonic_status"
+        ).innerHTML =
+            "🟢 Online";
+
+
+        document.getElementById(
+            "ultrasonic_value"
+        ).innerHTML =
+            data.sensors.distance + " cm";
+
+    }
+    else{
+
+        document.getElementById(
+            "ultrasonic_status"
+        ).innerHTML =
+            "🔴 Offline";
+
+
+        document.getElementById(
+            "ultrasonic_value"
+        ).innerHTML =
+            "-- cm";
+
+    }
+
+
+
+
+    // =======================
+    // LiDAR
+    // =======================
+
+    if(
+        data.sensors &&
+        data.sensors.lidar !== null &&
+        data.sensors.lidar !== "Offline"
+    ){
+
+        document.getElementById(
+            "lidar_status"
+        ).innerHTML =
+            "🟢 Online";
+
+
+        document.getElementById(
+            "lidar_value"
+        ).innerHTML =
+            data.sensors.lidar + " mm";
+
+    }
+    else{
+
+        document.getElementById(
+            "lidar_status"
+        ).innerHTML =
+            "🔴 Offline";
+
+
+        document.getElementById(
+            "lidar_value"
+        ).innerHTML =
+            "-- mm";
+
+    }
+
+
+
+// =======================
+// GPS Neo 6M
+// =======================
+
+let gpsLocation = null;
+
+if (data.gps) {
+
+    if (typeof data.gps === "string") {
+        gpsLocation = data.gps;
+    } else if (data.gps.location) {
+        gpsLocation = data.gps.location;
+    }
+
+}
+
+if (gpsLocation) {
+
+    document.getElementById("gps_status").innerHTML = "🟢 Online";
+    document.getElementById("gps_value").innerHTML = gpsLocation;
+
+} else {
+
+    document.getElementById("gps_status").innerHTML = "🔴 Offline";
+    document.getElementById("gps_value").innerHTML = "Waiting for GPS...";
+
+
+}
+
+
+
+if(gpsLocation){
+
+
+    document.getElementById(
+        "gps_status"
+    ).innerHTML =
+        "🟢 Online";
+
+
+    document.getElementById(
+        "gps_value"
+    ).innerHTML =
+        gpsLocation;
+
+
+}
+else{
+
+
+    document.getElementById(
+        "gps_status"
+    ).innerHTML =
+        "🔴 Offline";
+
+
+    document.getElementById(
+        "gps_value"
+    ).innerHTML =
+        "No GPS";
+
+
+}
+
+
+    // =======================
+    // Camera
+    // =======================
+
+    if(data.camera){
+
+
+        document.getElementById(
+            "camera_status"
+        ).innerHTML =
+            data.camera.status === "Online"
+            ? "🟢 Online"
+            : "🔴 Offline";
+
+
+
+        if(data.camera.image){
+
+
+            document.getElementById(
+                "camera_value"
+            ).innerHTML =
+            `
+            <img src="${data.camera.image}"
+            width="200"
+            style="border-radius:10px;">
+            `;
+
+
+        }
+        else{
+
+            document.getElementById(
+                "camera_value"
+            ).innerHTML =
+            "No Image";
+
+        }
+
+
+    }
+
+
+};
+
+
+
+
+socket.onerror = (error) => {
+
+    console.log(
+        "WebSocket Error:",
+        error
+    );
+
+};
+
+
+
+
+socket.onclose = () => {
+
+    console.log(
+        "HAQLOON WebSocket Disconnected"
+    );
+
+};
+
+
+</script>
+
+
+{% endblock %}

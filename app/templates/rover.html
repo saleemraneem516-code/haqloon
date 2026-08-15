@@ -1,0 +1,318 @@
+{% extends "base.html" %}
+
+
+{% block title %}
+Rover Controls — HAQLOON
+{% endblock %}
+
+
+
+{% block page_heading %}
+Rover Controls
+{% endblock %}
+
+
+
+{% block page_sub %}
+Manual Rover Navigation & Control
+{% endblock %}
+
+
+
+
+{% block content %}
+
+
+
+<div class="card">
+
+
+<div class="panel-title-row">
+
+<h3>
+🚜 HAQLOON Rover Movement
+</h3>
+
+</div>
+
+
+
+
+
+<div style="
+text-align:center;
+margin-top:30px;
+">
+
+
+
+<button class="btn btn-ghost"
+onclick="sendCommand('FORWARD')">
+
+⬆ Forward
+
+</button>
+
+
+
+<br><br>
+
+
+
+
+<button class="btn btn-ghost"
+onclick="sendCommand('LEFT')">
+
+⬅ Left
+
+</button>
+
+
+
+
+<button class="btn btn-danger"
+onclick="sendCommand('STOP')">
+
+⛔ Stop
+
+</button>
+
+
+
+
+<button class="btn btn-ghost"
+onclick="sendCommand('RIGHT')">
+
+Right ➡
+
+</button>
+
+
+
+
+<br><br>
+
+
+
+
+<button class="btn btn-ghost"
+onclick="sendCommand('BACKWARD')">
+
+⬇ Backward
+
+</button>
+
+
+
+
+</div>
+
+
+
+
+
+<hr>
+
+
+
+
+<h3>
+Current Command
+</h3>
+
+
+<div 
+class="stat-value signal"
+id="current_command">
+
+STOP
+
+</div>
+
+
+
+
+
+<h3 style="margin-top:30px;">
+Rover Connection
+</h3>
+
+
+
+<div 
+class="stat-value"
+id="rover_connection">
+
+🔴 Disconnected
+
+</div>
+
+
+
+
+</div>
+
+
+
+
+
+
+
+
+
+
+<script>
+
+
+// =======================
+// Send Rover Command
+// =======================
+
+
+async function sendCommand(command){
+
+
+console.log(
+"Sending:",
+command
+);
+
+
+
+try{
+
+
+let response = await fetch(
+"/api/control/move",
+{
+
+
+method:"POST",
+
+
+headers:{
+
+
+"Content-Type":
+"application/json"
+
+
+},
+
+
+body:JSON.stringify({
+
+command:command
+
+})
+
+
+
+});
+
+
+
+let data = await response.json();
+
+
+
+console.log(data);
+
+
+
+
+document.getElementById(
+"current_command"
+).innerHTML = command;
+
+
+
+}
+
+
+catch(error){
+
+
+console.log(
+error
+);
+
+
+}
+
+}
+
+
+
+
+
+// =======================
+// WebSocket Status
+// =======================
+
+
+const socket = new WebSocket(
+
+"wss://" + 
+window.location.host +
+"/api/rover/ws"
+
+);
+
+
+
+
+
+socket.onmessage = function(event){
+
+
+const data = JSON.parse(
+event.data
+);
+
+
+
+
+if(data.raspberry_pi){
+
+
+if(data.raspberry_pi=="Online"){
+
+
+document.getElementById(
+"rover_connection"
+).innerHTML =
+"🟢 Connected";
+
+
+}
+
+else{
+
+
+document.getElementById(
+"rover_connection"
+).innerHTML =
+"🔴 Disconnected";
+
+
+}
+
+
+}
+
+
+
+
+
+};
+
+
+
+
+</script>
+
+
+
+
+{% endblock %}

@@ -1,0 +1,514 @@
+{% extends "base.html" %}
+
+
+{% block title %}
+{{ page_title }} — HAQLOON
+{% endblock %}
+
+
+
+{% block page_heading %}
+{{ page_title }}
+{% endblock %}
+
+
+
+{% block page_sub %}
+Accessible to your role: {{ user.role|capitalize }}
+{% endblock %}
+
+
+
+
+{% block content %}
+
+
+
+{% if active == "sensors" %}
+
+
+<div class="stat-grid">
+
+
+    <div class="stat-card">
+
+        <div class="stat-label">
+            Temperature
+        </div>
+
+        <div class="stat-value" id="temperature">
+            {{ sensor.temperature if sensor else "--" }} °C
+        </div>
+
+    </div>
+
+
+
+    <div class="stat-card">
+
+        <div class="stat-label">
+            Humidity
+        </div>
+
+        <div class="stat-value" id="humidity">
+            {{ sensor.humidity if sensor else "--" }} %
+        </div>
+
+    </div>
+
+
+
+    <div class="stat-card">
+
+        <div class="stat-label">
+            Ultrasonic
+        </div>
+
+        <div class="stat-value" id="distance">
+            {{ sensor.distance if sensor else "--" }} cm
+        </div>
+
+    </div>
+
+
+
+    <div class="stat-card">
+
+        <div class="stat-label">
+            LiDAR
+        </div>
+
+        <div class="stat-value" id="lidar">
+            {{ sensor.lidar if sensor else "--" }} mm
+        </div>
+
+    </div>
+
+
+</div>
+
+
+
+
+
+<script>
+
+
+const protocol = window.location.protocol === "https:"
+    ? "wss://"
+    : "ws://";
+
+
+
+const socket = new WebSocket(
+    protocol + window.location.host + "/api/rover/ws"
+);
+
+
+
+socket.onmessage = function(event){
+
+
+    const data = JSON.parse(event.data);
+
+
+
+    if(data.sensors){
+
+
+        document.getElementById("temperature").innerHTML =
+            (data.sensors.temperature ?? "--") + " °C";
+
+
+        document.getElementById("humidity").innerHTML =
+            (data.sensors.humidity ?? "--") + " %";
+
+
+        document.getElementById("distance").innerHTML =
+            (data.sensors.distance ?? "--") + " cm";
+
+
+        document.getElementById("lidar").innerHTML =
+            (data.sensors.lidar ?? "--") + " mm";
+
+
+    }
+
+
+};
+
+
+
+socket.onopen = function(){
+
+    console.log("Sensor WebSocket Connected");
+
+};
+
+
+
+socket.onerror = function(error){
+
+    console.log("WebSocket Error", error);
+
+};
+
+
+
+</script>
+
+
+
+
+
+
+{% elif active == "camera" %}
+
+
+
+
+<div class="stat-grid">
+
+
+    <div class="stat-card">
+
+        <div class="stat-label">
+            Camera Status
+        </div>
+
+
+        <div class="stat-value" id="camera-status">
+            Offline
+        </div>
+
+
+    </div>
+
+
+</div>
+
+
+
+
+<div class="feature-placeholder">
+
+
+    <img
+        id="camera-image"
+        src=""
+        alt="Camera Feed"
+        style="
+        max-width:80%;
+        border-radius:10px;
+        display:block;
+        margin:auto;
+        "
+    >
+
+
+</div>
+
+
+
+
+<script>
+
+
+const cameraProtocol = window.location.protocol === "https:"
+    ? "wss://"
+    : "ws://";
+
+
+
+const cameraSocket = new WebSocket(
+    cameraProtocol + window.location.host + "/api/rover/ws"
+);
+
+
+
+cameraSocket.onmessage = function(event){
+
+
+    const data = JSON.parse(event.data);
+
+
+
+    if(data.camera){
+
+
+        document.getElementById("camera-status").innerHTML =
+            data.camera.status;
+
+
+
+        if(data.camera.image){
+
+
+            document.getElementById("camera-image").src =
+                data.camera.image;
+
+
+        }
+
+
+    }
+
+
+};
+
+
+
+cameraSocket.onopen = function(){
+
+    console.log("Camera WebSocket Connected");
+
+};
+
+
+
+</script>
+
+
+
+
+
+
+
+{% elif active == "gps" %}
+
+
+
+
+
+<div class="stat-grid">
+
+
+
+    <div class="stat-card">
+
+        <div class="stat-label">
+            Latitude
+        </div>
+
+        <div class="stat-value" id="latitude">
+            --
+        </div>
+
+    </div>
+
+
+
+
+
+    <div class="stat-card">
+
+        <div class="stat-label">
+            Longitude
+        </div>
+
+        <div class="stat-value" id="longitude">
+            --
+        </div>
+
+    </div>
+
+
+
+
+
+    <div class="stat-card">
+
+        <div class="stat-label">
+            GPS Status
+        </div>
+
+        <div class="stat-value" id="gps-status">
+            Offline
+        </div>
+
+    </div>
+
+
+
+</div>
+
+
+
+
+
+<div class="feature-placeholder">
+
+
+    <div class="glyph"></div>
+
+
+    <h3 style="color:var(--paper);">
+        GPS Tracking
+    </h3>
+
+
+    <p>
+        Live GPS location and rover path
+    </p>
+
+
+</div>
+
+
+
+
+
+
+<script>
+
+
+
+const gpsProtocol = window.location.protocol === "https:"
+    ? "wss://"
+    : "ws://";
+
+
+
+const gpsSocket = new WebSocket(
+    gpsProtocol + window.location.host + "/api/rover/ws"
+);
+
+
+
+
+
+gpsSocket.onmessage = function(event){
+
+
+    const data = JSON.parse(event.data);
+
+
+
+    console.log("Received:", data);
+
+
+
+    if(data.gps){
+
+
+
+        document.getElementById("latitude").innerHTML =
+            data.gps.latitude ?? "--";
+
+
+
+        document.getElementById("longitude").innerHTML =
+            data.gps.longitude ?? "--";
+
+
+
+        document.getElementById("gps-status").innerHTML =
+            "Online";
+
+
+    }
+
+
+
+};
+
+
+
+
+
+gpsSocket.onopen = function(){
+
+    console.log("GPS WebSocket Connected");
+
+};
+
+
+
+
+
+gpsSocket.onerror = function(error){
+
+    console.log("GPS WebSocket Error", error);
+
+};
+
+
+
+</script>
+
+
+
+
+
+
+
+{% elif active == "ai-detection" %}
+
+
+
+
+
+<div class="feature-placeholder">
+
+
+    <div class="glyph"></div>
+
+
+    <h3 style="color:var(--paper);">
+        AI Detection
+    </h3>
+
+
+    <p>
+        YOLO disease detection results will appear here.
+    </p>
+
+
+</div>
+
+
+
+
+
+
+
+{% else %}
+
+
+
+
+
+<div class="feature-placeholder">
+
+
+    <div class="glyph"></div>
+
+
+    <h3 style="color:var(--paper); margin-bottom:6px;">
+        {{ page_title }} module
+    </h3>
+
+
+
+    <p style="max-width:420px; margin:0 auto;">
+
+        This panel is wired up and access-controlled,
+        ready for the real
+        {{ page_title|lower }}
+        integration to be connected here.
+
+    </p>
+
+
+
+</div>
+
+
+
+
+
+{% endif %}
+
+
+
+{% endblock %}

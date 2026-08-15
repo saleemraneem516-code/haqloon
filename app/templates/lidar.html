@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}
+LiDAR Map
+{% endblock %}
+
+
+{% block page_heading %}
+LiDAR Map
+{% endblock %}
+
+
+{% block page_sub %}
+360° RPLIDAR A1 Mapping
+{% endblock %}
+
+
+
+{% block content %}
+
+
+<div class="stat-card">
+
+<h2>
+Live LiDAR Map
+</h2>
+
+
+<canvas
+id="lidarCanvas"
+width="600"
+height="600"
+style="border:2px solid red;">
+</canvas>
+
+
+</div>
+
+
+
+<script>
+
+async function loadLidar(){
+
+    const response = await fetch("/api/lidar");
+
+    const data = await response.json();
+
+    console.log("LIDAR DATA:", data);
+
+
+    drawLidar(data.points);
+
+}
+
+
+
+function drawLidar(points){
+
+    const canvas =
+    document.getElementById(
+        "lidarCanvas"
+    );
+
+
+    const ctx =
+    canvas.getContext("2d");
+
+
+    ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+
+    const cx =
+    canvas.width / 2;
+
+
+    const cy =
+    canvas.height / 2;
+
+
+
+    points.forEach(p => {
+
+
+        const x =
+        cx + p[0];
+
+
+        const y =
+        cy - p[1];
+
+
+
+        ctx.beginPath();
+
+
+        ctx.arc(
+            x,
+            y,
+            4,
+            0,
+            Math.PI * 2
+        );
+
+
+        ctx.fill();
+
+
+    });
+
+
+}
+
+
+
+loadLidar();
+
+
+setInterval(
+    loadLidar,
+    3000
+);
+
+
+</script>
+
+
+{% endblock %}

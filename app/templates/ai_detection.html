@@ -1,0 +1,288 @@
+{% extends "base.html" %}
+
+
+{% block title %}
+AI Detection — HAQLOON
+{% endblock %}
+
+
+
+{% block page_heading %}
+AI Tomato Disease Detection
+{% endblock %}
+
+
+
+{% block page_sub %}
+YOLOv8 Real-Time Crop Disease Analysis
+{% endblock %}
+
+
+
+
+{% block content %}
+
+
+<div class="card">
+
+
+<div class="panel-title-row">
+
+<h3>
+🍅 Tomato Disease Detection
+</h3>
+
+</div>
+
+
+
+<div class="stat-grid">
+
+
+
+<div class="stat-card">
+
+
+<div class="stat-label">
+Detection Result
+</div>
+
+
+<div 
+class="stat-value signal"
+id="ai_result">
+No Detection
+</div>
+
+
+</div>
+
+
+
+
+
+<div class="stat-card">
+
+
+<div class="stat-label">
+Confidence
+</div>
+
+
+<div 
+class="stat-value"
+id="ai_confidence">
+0 %
+</div>
+
+
+</div>
+
+
+
+
+
+
+<div class="stat-card">
+
+
+<div class="stat-label">
+Last Detection Time
+</div>
+
+
+<div 
+class="stat-value"
+id="ai_time">
+--
+</div>
+
+
+</div>
+
+
+
+
+</div>
+
+
+
+
+
+<h3 style="margin-top:30px;">
+Detected Image
+</h3>
+
+
+
+<div>
+
+
+<img 
+id="ai_image"
+src=""
+style="
+width:450px;
+border-radius:15px;
+display:none;
+"
+>
+
+
+<p id="no_image">
+No Image Available
+</p>
+
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+
+
+<script>
+
+
+const socket = new WebSocket(
+    "wss://" + window.location.host + "/api/rover/ws"
+);
+
+
+
+
+
+socket.onopen = () => {
+
+console.log(
+"AI Detection Connected"
+);
+
+};
+
+
+
+
+
+
+socket.onmessage = function(event){
+
+
+const data = JSON.parse(event.data);
+
+
+
+console.log(data);
+
+
+
+
+
+// =====================
+// AI Result
+// =====================
+
+
+if(data.ai){
+
+
+
+document.getElementById(
+"ai_result"
+).innerHTML =
+data.ai.result;
+
+
+
+document.getElementById(
+"ai_confidence"
+).innerHTML =
+data.ai.confidence + "%";
+
+
+
+document.getElementById(
+"ai_time"
+).innerHTML =
+data.ai.time ?? "--";
+
+
+
+}
+
+
+
+
+
+
+// =====================
+// Image
+// =====================
+
+
+if(
+data.camera
+&&
+data.camera.image
+){
+
+
+
+let img =
+document.getElementById(
+"ai_image"
+);
+
+
+
+img.src =
+data.camera.image;
+
+
+
+img.style.display =
+"block";
+
+
+
+document.getElementById(
+"no_image"
+).style.display =
+"none";
+
+
+
+}
+
+
+
+};
+
+
+
+
+
+
+socket.onclose = () => {
+
+
+console.log(
+"AI Detection Disconnected"
+);
+
+
+};
+
+
+
+</script>
+
+
+
+
+{% endblock %}

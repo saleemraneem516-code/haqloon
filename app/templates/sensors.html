@@ -1,0 +1,1383 @@
+{% extends "base.html" %}
+
+{% block title %}
+Sensors — HAQLOON
+{% endblock %}
+
+
+{% block page_heading %}
+Sensors
+{% endblock %}
+
+
+{% block page_sub %}
+Live rover sensor readings and stored history
+{% endblock %}
+
+
+{% block content %}
+
+<style>
+    .sensor-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 18px;
+        padding: 8px 14px;
+        border-radius: 20px;
+        background: rgba(0, 128, 0, 0.08);
+        font-size: 14px;
+    }
+
+    .sensor-status-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #999;
+    }
+
+    .sensor-status-dot.connected {
+        background: #22c55e;
+    }
+
+    .sensor-status-dot.disconnected {
+        background: #ef4444;
+    }
+
+    .sensor-history-card {
+        margin-top: 24px;
+        padding: 20px;
+        border-radius: 16px;
+        background: var(--card-bg, #ffffff);
+        border: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    .sensor-history-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 18px;
+        flex-wrap: wrap;
+    }
+
+    .sensor-history-title {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 600;
+    }
+
+    .sensor-history-subtitle {
+        margin: 4px 0 0;
+        font-size: 14px;
+        color: #777;
+    }
+
+    .sensor-filter {
+        padding: 10px 14px;
+        border-radius: 10px;
+        border: 1px solid rgba(0, 0, 0, 0.15);
+        background: var(--card-bg, #ffffff);
+        color: inherit;
+        font-size: 14px;
+    }
+
+    .sensor-chart-grid {
+        display: grid;
+        grid-template-columns: repeat(
+            auto-fit,
+            minmax(300px, 1fr)
+        );
+        gap: 28px;
+    }
+
+    .sensor-chart-box {
+        min-height: 300px;
+    }
+
+    .sensor-chart-title {
+        margin: 0 0 14px;
+        text-align: center;
+        font-size: 16px;
+        font-weight: 600;
+    }
+
+    .sensor-chart-container {
+        position: relative;
+        height: 260px;
+        width: 100%;
+    }
+
+    .sensor-table-wrapper {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    .sensor-table {
+        width: 100%;
+        min-width: 760px;
+        border-collapse: collapse;
+    }
+
+    .sensor-table th,
+    .sensor-table td {
+        padding: 12px 14px;
+        text-align: center;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        white-space: nowrap;
+    }
+
+    .sensor-table th {
+        font-size: 14px;
+        font-weight: 600;
+        background: rgba(0, 128, 0, 0.06);
+    }
+
+    .sensor-table td {
+        font-size: 14px;
+    }
+
+    .sensor-table tbody tr:hover {
+        background: rgba(0, 128, 0, 0.04);
+    }
+
+    .empty-history {
+        padding: 25px;
+        text-align: center;
+        color: #777;
+    }
+
+    .live-row {
+        animation: highlight-row 2s ease;
+    }
+
+    @keyframes highlight-row {
+        from {
+            background: rgba(34, 197, 94, 0.25);
+        }
+
+        to {
+            background: transparent;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .sensor-history-card {
+            padding: 15px;
+        }
+
+        .sensor-chart-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+
+<!-- حالة الاتصال -->
+<div class="sensor-status">
+    <span
+        id="connection-status-dot"
+        class="sensor-status-dot disconnected">
+    </span>
+
+    <span id="connection-status-text">
+        Connecting to rover...
+    </span>
+</div>
+
+
+<!-- القيم الحالية -->
+<div class="stat-grid">
+
+    <div class="stat-card">
+        <div class="stat-label">
+            Temperature
+        </div>
+
+        <div
+            id="temperature-value"
+            class="stat-value">
+
+            🌡
+            {% if data.sensors.temperature is not none %}
+                {{ data.sensors.temperature }} °C
+            {% else %}
+                Offline
+            {% endif %}
+
+        </div>
+    </div>
+
+
+    <div class="stat-card">
+        <div class="stat-label">
+            Humidity
+        </div>
+
+        <div
+            id="humidity-value"
+            class="stat-value">
+
+            💧
+            {% if data.sensors.humidity is not none %}
+                {{ data.sensors.humidity }} %
+            {% else %}
+                Offline
+            {% endif %}
+
+        </div>
+    </div>
+
+
+    <div class="stat-card">
+        <div class="stat-label">
+            Ultrasonic Distance
+        </div>
+
+        <div
+            id="distance-value"
+            class="stat-value">
+
+            📏
+            {% if data.sensors.distance is not none %}
+                {{ data.sensors.distance }} cm
+            {% else %}
+                Offline
+            {% endif %}
+
+        </div>
+    </div>
+
+
+    <div class="stat-card">
+        <div class="stat-label">
+            LiDAR
+        </div>
+
+        <div
+            id="lidar-value"
+            class="stat-value">
+
+            📡
+            {% if data.sensors.lidar is not none %}
+                {{ data.sensors.lidar }} mm
+            {% else %}
+                Offline
+            {% endif %}
+
+        </div>
+    </div>
+
+</div>
+
+
+<!-- آخر تحديث -->
+<div class="stat-card">
+
+    <div class="stat-label">
+        Last Update
+    </div>
+
+    <div
+        id="last-update-value"
+        class="stat-value">
+
+        🕒
+        {% if data.last_update %}
+            {{ data.last_update }}
+        {% else %}
+            No data
+        {% endif %}
+
+    </div>
+
+</div>
+
+
+<!-- فلترة المقارنة -->
+<div class="sensor-history-card">
+
+    <div class="sensor-history-header">
+
+        <div>
+            <h2 class="sensor-history-title">
+                Compare Sensor Readings
+            </h2>
+
+            <p class="sensor-history-subtitle">
+                Select the period to compare
+            </p>
+        </div>
+
+        <select
+            id="history-filter"
+            class="sensor-filter">
+
+            <option value="all">
+                All readings
+            </option>
+
+            <option value="hour">
+                Last hour
+            </option>
+
+            <option value="day">
+                Last 24 hours
+            </option>
+
+            <option value="week">
+                Last 7 days
+            </option>
+
+        </select>
+
+    </div>
+
+</div>
+
+
+<!-- الرسوم البيانية -->
+<div class="sensor-history-card">
+
+    <div class="sensor-history-header">
+
+        <div>
+            <h2 class="sensor-history-title">
+                Sensor Charts
+            </h2>
+
+            <p class="sensor-history-subtitle">
+                Sensor readings changing over time
+            </p>
+        </div>
+
+    </div>
+
+
+    <div class="sensor-chart-grid">
+
+        <div class="sensor-chart-box">
+
+            <h3 class="sensor-chart-title">
+                Temperature
+            </h3>
+
+            <div class="sensor-chart-container">
+                <canvas id="temperature-chart"></canvas>
+            </div>
+
+        </div>
+
+
+        <div class="sensor-chart-box">
+
+            <h3 class="sensor-chart-title">
+                Humidity
+            </h3>
+
+            <div class="sensor-chart-container">
+                <canvas id="humidity-chart"></canvas>
+            </div>
+
+        </div>
+
+
+        <div class="sensor-chart-box">
+
+            <h3 class="sensor-chart-title">
+                Ultrasonic Distance
+            </h3>
+
+            <div class="sensor-chart-container">
+                <canvas id="distance-chart"></canvas>
+            </div>
+
+        </div>
+
+
+        <div class="sensor-chart-box">
+
+            <h3 class="sensor-chart-title">
+                LiDAR
+            </h3>
+
+            <div class="sensor-chart-container">
+                <canvas id="lidar-chart"></canvas>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- جدول السجل -->
+<div class="sensor-history-card">
+
+    <div class="sensor-history-header">
+
+        <div>
+            <h2 class="sensor-history-title">
+                Sensor History
+            </h2>
+
+            <p class="sensor-history-subtitle">
+                Stored readings for comparison
+            </p>
+        </div>
+
+        <span id="history-count">
+            {{ history | length }} readings
+        </span>
+
+    </div>
+
+
+    <div class="sensor-table-wrapper">
+
+        <table class="sensor-table">
+
+            <thead>
+                <tr>
+                    <th>Date and Time</th>
+                    <th>Temperature</th>
+                    <th>Humidity</th>
+                    <th>Distance</th>
+                    <th>LiDAR</th>
+                </tr>
+            </thead>
+
+
+            <tbody id="sensor-history-body">
+
+                {% if history %}
+
+                    {% for reading in history %}
+
+                    <tr
+                        data-created-at="{{ reading.created_at or '' }}">
+
+                        <td>
+                            {{ reading.created_at or "—" }}
+                        </td>
+
+                        <td>
+                            {% if reading.temperature is not none %}
+                                {{ reading.temperature }} °C
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if reading.humidity is not none %}
+                                {{ reading.humidity }} %
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if reading.distance is not none %}
+                                {{ reading.distance }} cm
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if reading.lidar is not none %}
+                                {{ reading.lidar }} mm
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                {% else %}
+
+                    <tr id="empty-history-row">
+                        <td
+                            colspan="5"
+                            class="empty-history">
+
+                            No sensor readings have been stored yet.
+
+                        </td>
+                    </tr>
+
+                {% endif %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+
+<!-- تخزين بيانات Jinja كـ JSON بدون أخطاء JavaScript -->
+<script
+    id="sensor-history-json"
+    type="application/json">
+    {{ history | tojson }}
+</script>
+
+
+<!-- مكتبة الرسوم البيانية -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+<script>
+    document.addEventListener(
+        "DOMContentLoaded",
+        function () {
+
+            const temperatureElement =
+                document.getElementById(
+                    "temperature-value"
+                );
+
+            const humidityElement =
+                document.getElementById(
+                    "humidity-value"
+                );
+
+            const distanceElement =
+                document.getElementById(
+                    "distance-value"
+                );
+
+            const lidarElement =
+                document.getElementById(
+                    "lidar-value"
+                );
+
+            const lastUpdateElement =
+                document.getElementById(
+                    "last-update-value"
+                );
+
+            const historyBody =
+                document.getElementById(
+                    "sensor-history-body"
+                );
+
+            const historyCountElement =
+                document.getElementById(
+                    "history-count"
+                );
+
+            const statusDot =
+                document.getElementById(
+                    "connection-status-dot"
+                );
+
+            const statusText =
+                document.getElementById(
+                    "connection-status-text"
+                );
+
+            const filterElement =
+                document.getElementById(
+                    "history-filter"
+                );
+
+            const historyJsonElement =
+                document.getElementById(
+                    "sensor-history-json"
+                );
+
+
+            let websocket = null;
+            let reconnectTimer = null;
+            let sensorHistory = [];
+
+
+            try {
+
+                sensorHistory =
+                    JSON.parse(
+                        historyJsonElement.textContent
+                    );
+
+            } catch (error) {
+
+                console.error(
+                    "Could not load sensor history:",
+                    error
+                );
+
+                sensorHistory = [];
+
+            }
+
+
+            function normaliseReading(data) {
+
+                if (!data) {
+                    return null;
+                }
+
+                /*
+                    يدعم الشكلين:
+
+                    {
+                        "sensors": {
+                            "temperature": 25
+                        }
+                    }
+
+                    أو:
+
+                    {
+                        "temperature": 25
+                    }
+                */
+
+                const source =
+                    data.sensors || data;
+
+                const createdAt =
+                    data.last_update ||
+                    data.created_at ||
+                    source.created_at ||
+                    new Date().toISOString();
+
+                return {
+                    id:
+                        data.id ||
+                        source.id ||
+                        null,
+
+                    temperature:
+                        source.temperature ?? null,
+
+                    humidity:
+                        source.humidity ?? null,
+
+                    distance:
+                        source.distance ?? null,
+
+                    lidar:
+                        source.lidar ?? null,
+
+                    created_at:
+                        createdAt
+                };
+
+            }
+
+
+            function hasSensorValue(reading) {
+
+                if (!reading) {
+                    return false;
+                }
+
+                return (
+                    reading.temperature !== null ||
+                    reading.humidity !== null ||
+                    reading.distance !== null ||
+                    reading.lidar !== null
+                );
+
+            }
+
+
+            function displayValue(
+                value,
+                unit,
+                icon
+            ) {
+
+                if (
+                    value === null ||
+                    value === undefined ||
+                    value === "Offline"
+                ) {
+                    return `${icon} Offline`;
+                }
+
+                return `${icon} ${value} ${unit}`;
+
+            }
+
+
+            function tableValue(
+                value,
+                unit
+            ) {
+
+                if (
+                    value === null ||
+                    value === undefined ||
+                    value === "Offline"
+                ) {
+                    return "—";
+                }
+
+                return `${value} ${unit}`;
+
+            }
+
+
+            function formatDateTime(dateValue) {
+
+                if (!dateValue) {
+                    return "No data";
+                }
+
+                const date =
+                    new Date(dateValue);
+
+                if (
+                    Number.isNaN(
+                        date.getTime()
+                    )
+                ) {
+                    return dateValue;
+                }
+
+                return date.toLocaleString();
+
+            }
+
+
+            function setConnectionStatus(
+                connected
+            ) {
+
+                if (connected) {
+
+                    statusDot.classList.remove(
+                        "disconnected"
+                    );
+
+                    statusDot.classList.add(
+                        "connected"
+                    );
+
+                    statusText.textContent =
+                        "Live connection active";
+
+                } else {
+
+                    statusDot.classList.remove(
+                        "connected"
+                    );
+
+                    statusDot.classList.add(
+                        "disconnected"
+                    );
+
+                    statusText.textContent =
+                        "Connection lost — reconnecting...";
+
+                }
+
+            }
+
+
+            function updateCurrentReadings(
+                reading
+            ) {
+
+                if (!reading) {
+                    return;
+                }
+
+                temperatureElement.textContent =
+                    displayValue(
+                        reading.temperature,
+                        "°C",
+                        "🌡"
+                    );
+
+                humidityElement.textContent =
+                    displayValue(
+                        reading.humidity,
+                        "%",
+                        "💧"
+                    );
+
+                distanceElement.textContent =
+                    displayValue(
+                        reading.distance,
+                        "cm",
+                        "📏"
+                    );
+
+                lidarElement.textContent =
+                    displayValue(
+                        reading.lidar,
+                        "mm",
+                        "📡"
+                    );
+
+                lastUpdateElement.textContent =
+                    `🕒 ${
+                        formatDateTime(
+                            reading.created_at
+                        )
+                    }`;
+
+            }
+
+
+            function createSensorChart(
+                canvasId,
+                label,
+                unit
+            ) {
+
+                const canvas =
+                    document.getElementById(
+                        canvasId
+                    );
+
+                return new Chart(
+                    canvas,
+                    {
+                        type: "line",
+
+                        data: {
+                            labels: [],
+
+                            datasets: [
+                                {
+                                    label:
+                                        `${label} (${unit})`,
+
+                                    data: [],
+
+                                    borderWidth: 2,
+                                    tension: 0.3,
+                                    pointRadius: 2,
+                                    spanGaps: true
+                                }
+                            ]
+                        },
+
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+
+                            interaction: {
+                                intersect: false,
+                                mode: "index"
+                            },
+
+                            plugins: {
+                                legend: {
+                                    display: true
+                                }
+                            },
+
+                            scales: {
+                                x: {
+                                    title: {
+                                        display: true,
+                                        text: "Time"
+                                    },
+
+                                    ticks: {
+                                        maxTicksLimit: 8
+                                    }
+                                },
+
+                                y: {
+                                    title: {
+                                        display: true,
+                                        text: unit
+                                    },
+
+                                    beginAtZero: false
+                                }
+                            }
+                        }
+                    }
+                );
+
+            }
+
+
+            const temperatureChart =
+                createSensorChart(
+                    "temperature-chart",
+                    "Temperature",
+                    "°C"
+                );
+
+            const humidityChart =
+                createSensorChart(
+                    "humidity-chart",
+                    "Humidity",
+                    "%"
+                );
+
+            const distanceChart =
+                createSensorChart(
+                    "distance-chart",
+                    "Distance",
+                    "cm"
+                );
+
+            const lidarChart =
+                createSensorChart(
+                    "lidar-chart",
+                    "LiDAR",
+                    "mm"
+                );
+
+
+            function getReadingTime(
+                reading
+            ) {
+
+                if (!reading.created_at) {
+                    return NaN;
+                }
+
+                return new Date(
+                    reading.created_at
+                ).getTime();
+
+            }
+
+
+            function getFilteredHistory() {
+
+                const filterValue =
+                    filterElement.value;
+
+                if (filterValue === "all") {
+                    return sensorHistory;
+                }
+
+                let periodMilliseconds = 0;
+
+                if (filterValue === "hour") {
+
+                    periodMilliseconds =
+                        60 * 60 * 1000;
+
+                } else if (
+                    filterValue === "day"
+                ) {
+
+                    periodMilliseconds =
+                        24 * 60 * 60 * 1000;
+
+                } else if (
+                    filterValue === "week"
+                ) {
+
+                    periodMilliseconds =
+                        7 * 24 * 60 * 60 * 1000;
+
+                }
+
+                const minimumTime =
+                    Date.now() -
+                    periodMilliseconds;
+
+                return sensorHistory.filter(
+                    function (reading) {
+
+                        const readingTime =
+                            getReadingTime(
+                                reading
+                            );
+
+                        return (
+                            !Number.isNaN(
+                                readingTime
+                            ) &&
+                            readingTime >=
+                                minimumTime
+                        );
+
+                    }
+                );
+
+            }
+
+
+            function updateChart(
+                chart,
+                readings,
+                field
+            ) {
+
+                const orderedReadings =
+                    [...readings]
+                        .sort(
+                            function (a, b) {
+
+                                return (
+                                    getReadingTime(a) -
+                                    getReadingTime(b)
+                                );
+
+                            }
+                        );
+
+                chart.data.labels =
+                    orderedReadings.map(
+                        function (reading) {
+
+                            return formatDateTime(
+                                reading.created_at
+                            );
+
+                        }
+                    );
+
+                chart.data.datasets[0].data =
+                    orderedReadings.map(
+                        function (reading) {
+
+                            return reading[field];
+
+                        }
+                    );
+
+                chart.update();
+
+            }
+
+
+            function updateTableVisibility(
+                filteredReadings
+            ) {
+
+                const allowedTimes =
+                    new Set(
+                        filteredReadings.map(
+                            function (reading) {
+
+                                return String(
+                                    reading.created_at ||
+                                    ""
+                                );
+
+                            }
+                        )
+                    );
+
+                const rows =
+                    historyBody.querySelectorAll(
+                        "tr[data-created-at]"
+                    );
+
+                rows.forEach(
+                    function (row) {
+
+                        const createdAt =
+                            row.dataset.createdAt ||
+                            "";
+
+                        row.style.display =
+                            allowedTimes.has(
+                                createdAt
+                            )
+                                ? ""
+                                : "none";
+
+                    }
+                );
+
+                historyCountElement.textContent =
+                    `${filteredReadings.length} readings`;
+
+            }
+
+
+            function updateAllCharts() {
+
+                const filteredReadings =
+                    getFilteredHistory();
+
+                updateChart(
+                    temperatureChart,
+                    filteredReadings,
+                    "temperature"
+                );
+
+                updateChart(
+                    humidityChart,
+                    filteredReadings,
+                    "humidity"
+                );
+
+                updateChart(
+                    distanceChart,
+                    filteredReadings,
+                    "distance"
+                );
+
+                updateChart(
+                    lidarChart,
+                    filteredReadings,
+                    "lidar"
+                );
+
+                updateTableVisibility(
+                    filteredReadings
+                );
+
+            }
+
+
+            function addReadingToHistory(
+                reading
+            ) {
+
+                if (!hasSensorValue(reading)) {
+                    return;
+                }
+
+                const emptyRow =
+                    document.getElementById(
+                        "empty-history-row"
+                    );
+
+                if (emptyRow) {
+                    emptyRow.remove();
+                }
+
+
+                const row =
+                    document.createElement(
+                        "tr"
+                    );
+
+                row.classList.add(
+                    "live-row"
+                );
+
+                row.dataset.createdAt =
+                    reading.created_at || "";
+
+                row.innerHTML = `
+                    <td>
+                        ${
+                            formatDateTime(
+                                reading.created_at
+                            )
+                        }
+                    </td>
+
+                    <td>
+                        ${
+                            tableValue(
+                                reading.temperature,
+                                "°C"
+                            )
+                        }
+                    </td>
+
+                    <td>
+                        ${
+                            tableValue(
+                                reading.humidity,
+                                "%"
+                            )
+                        }
+                    </td>
+
+                    <td>
+                        ${
+                            tableValue(
+                                reading.distance,
+                                "cm"
+                            )
+                        }
+                    </td>
+
+                    <td>
+                        ${
+                            tableValue(
+                                reading.lidar,
+                                "mm"
+                            )
+                        }
+                    </td>
+                `;
+
+                historyBody.prepend(row);
+
+                sensorHistory.unshift(
+                    reading
+                );
+
+
+                /*
+                    إبقاء آخر 1000 قراءة في
+                    الصفحة والرسوم.
+
+                    قاعدة البيانات لا تُحذف.
+                */
+
+                if (
+                    sensorHistory.length > 1000
+                ) {
+                    sensorHistory.pop();
+                }
+
+
+                while (
+                    historyBody.rows.length > 1000
+                ) {
+
+                    historyBody.deleteRow(
+                        historyBody.rows.length - 1
+                    );
+
+                }
+
+                updateAllCharts();
+
+            }
+
+
+            function connectWebSocket() {
+
+                const websocketProtocol =
+                    window.location.protocol ===
+                    "https:"
+                        ? "wss:"
+                        : "ws:";
+
+                const websocketUrl =
+                    `${websocketProtocol}//` +
+                    `${window.location.host}` +
+                    `/api/rover/ws`;
+
+                websocket =
+                    new WebSocket(
+                        websocketUrl
+                    );
+
+
+                websocket.addEventListener(
+                    "open",
+                    function () {
+
+                        setConnectionStatus(
+                            true
+                        );
+
+                        if (reconnectTimer) {
+
+                            clearTimeout(
+                                reconnectTimer
+                            );
+
+                            reconnectTimer = null;
+
+                        }
+
+                    }
+                );
+
+
+                websocket.addEventListener(
+                    "message",
+                    function (event) {
+
+                        try {
+
+                            const data =
+                                JSON.parse(
+                                    event.data
+                                );
+
+                            const reading =
+                                normaliseReading(
+                                    data
+                                );
+
+                            if (
+                                !hasSensorValue(
+                                    reading
+                                )
+                            ) {
+                                return;
+                            }
+
+                            updateCurrentReadings(
+                                reading
+                            );
+
+                            addReadingToHistory(
+                                reading
+                            );
+
+                        } catch (error) {
+
+                            console.error(
+                                "Could not read WebSocket data:",
+                                error
+                            );
+
+                        }
+
+                    }
+                );
+
+
+                websocket.addEventListener(
+                    "close",
+                    function () {
+
+                        setConnectionStatus(
+                            false
+                        );
+
+                        reconnectTimer =
+                            setTimeout(
+                                connectWebSocket,
+                                3000
+                            );
+
+                    }
+                );
+
+
+                websocket.addEventListener(
+                    "error",
+                    function () {
+
+                        setConnectionStatus(
+                            false
+                        );
+
+                        websocket.close();
+
+                    }
+                );
+
+            }
+
+
+            filterElement.addEventListener(
+                "change",
+                updateAllCharts
+            );
+
+
+            updateAllCharts();
+            connectWebSocket();
+
+        }
+    );
+</script>
+
+{% endblock %}

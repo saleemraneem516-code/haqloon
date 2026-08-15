@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Add User' if mode == 'add' else 'Edit User' }} — HAQLOON{% endblock %}
+{% block page_heading %}{{ 'Add User' if mode == 'add' else 'Edit User' }}{% endblock %}
+{% block page_sub %}{{ 'Create a new HAQLOON account' if mode == 'add' else 'Update account details and permissions' }}{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width:520px;">
+  {% if error %}<div class="alert alert-error">{{ error }}</div>{% endif %}
+
+  <form method="post" action="{{ '/admin/users/add' if mode == 'add' else '/admin/users/edit/' ~ target.id }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+
+    <div class="field">
+      <label for="full_name">Full Name</label>
+      <input id="full_name" name="full_name" type="text" required value="{{ target.full_name if target else '' }}" />
+    </div>
+
+    <div class="field">
+      <label for="username">Username</label>
+      <input id="username" name="username" type="text" required value="{{ target.username if target else '' }}" />
+    </div>
+
+    <div class="field">
+      <label for="email">Email</label>
+      <input id="email" name="email" type="email" required value="{{ target.email if target else '' }}" />
+    </div>
+
+    {% if mode == 'add' %}
+    <div class="field">
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" required />
+      <div class="field-hint">At least 8 characters, with letters and numbers.</div>
+    </div>
+    {% endif %}
+
+    <div class="field">
+      <label for="role">Role</label>
+      <select id="role" name="role">
+        <option value="employee" {% if target and target.role == 'employee' %}selected{% endif %}>Employee</option>
+        <option value="admin" {% if target and target.role == 'admin' %}selected{% endif %}>Administrator</option>
+      </select>
+    </div>
+
+    {% if mode == 'edit' %}
+    <div class="checkbox-field">
+      <input id="is_active" name="is_active" type="checkbox" value="1" {% if target.is_active %}checked{% endif %} />
+      <label for="is_active" style="margin:0;">Account enabled</label>
+    </div>
+    {% endif %}
+
+    <div style="display:flex; gap:10px; margin-top:10px;">
+      <button class="btn btn-primary" type="submit">{{ 'Create User' if mode == 'add' else 'Save Changes' }}</button>
+      <a class="btn btn-ghost" href="/admin/users">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

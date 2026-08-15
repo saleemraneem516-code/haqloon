@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+
+{% block title %}
+Alerts History
+{% endblock %}
+
+
+
+{% block page_heading %}
+Alerts History
+{% endblock %}
+
+
+
+{% block content %}
+
+
+<div class="card">
+
+
+<h3>
+🚨 Rover Alerts History
+</h3>
+
+
+
+{% if alerts %}
+
+
+{% for alert in alerts %}
+
+
+<div class="stat-card">
+
+
+<div class="stat-label">
+{{ alert.level }}
+</div>
+
+
+
+<div class="stat-value">
+{{ alert.title }}
+</div>
+
+
+
+<p>
+{{ alert.message }}
+</p>
+
+
+
+<small>
+{{ alert.created_at }}
+</small>
+
+
+</div>
+
+
+
+{% endfor %}
+
+
+
+{% else %}
+
+
+<p>
+No alerts found.
+</p>
+
+
+{% endif %}
+
+
+
+</div>
+
+
+{% endblock %}

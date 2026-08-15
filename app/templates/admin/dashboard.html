@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Admin Panel — HAQLOON{% endblock %}
+{% block page_heading %}Admin Panel{% endblock %}
+{% block page_sub %}System statistics and account oversight{% endblock %}
+
+{% block content %}
+<div class="stat-grid">
+  <div class="stat-card">
+    <div class="stat-label">Total Users</div>
+    <div class="stat-value">{{ total_users }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Active Users</div>
+    <div class="stat-value signal">{{ active_users }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Disabled Users</div>
+    <div class="stat-value danger">{{ disabled_users }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Administrators</div>
+    <div class="stat-value amber">{{ admin_count }}</div>
+  </div>
+</div>
+
+<div class="panel-title-row">
+  <h3>&nbsp;</h3>
+  <a class="btn btn-primary btn-sm" href="/admin/users/add">+ Add User</a>
+</div>
+
+<div class="card" style="margin-bottom:20px;">
+  <div class="panel-title-row"><h3>Recent Logins</h3></div>
+  {% if recent_logins %}
+  <table>
+    <thead><tr><th>User</th><th>Role</th><th>Last Login</th></tr></thead>
+    <tbody>
+      {% for u in recent_logins %}
+      <tr>
+        <td class="table-user"><img class="avatar" src="{{ u.profile_picture }}" alt=""> {{ u.full_name }} <span class="mono" style="color:var(--fog);">@{{ u.username }}</span></td>
+        <td><span class="badge {% if u.is_admin %}badge-admin{% else %}badge-employee{% endif %}">{{ u.role }}</span></td>
+        <td class="mono">{{ u.last_login.strftime('%Y-%m-%d %H:%M') }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty-state"><h3>No logins yet</h3><p>Sign-ins will appear here once users start using the system.</p></div>
+  {% endif %}
+</div>
+
+<div class="card">
+  <div class="panel-title-row"><h3>Activity Log</h3></div>
+  {% if recent_activity %}
+  <table>
+    <thead><tr><th>Time</th><th>User</th><th>Action</th><th>IP</th></tr></thead>
+    <tbody>
+      {% for log in recent_activity %}
+      <tr>
+        <td class="mono">{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+        <td>{{ log.username }}</td>
+        <td>{{ log.action }}</td>
+        <td class="mono" style="color:var(--fog);">{{ log.ip_address or '—' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty-state"><h3>No activity yet</h3></div>
+  {% endif %}
+</div>
+{% endblock %}

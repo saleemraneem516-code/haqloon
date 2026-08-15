@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+
+{% block title %}
+Notifications — HAQLOON
+{% endblock %}
+
+
+
+{% block page_heading %}
+Notifications
+{% endblock %}
+
+
+
+{% block page_sub %}
+Rover Events History
+{% endblock %}
+
+
+
+
+
+{% block content %}
+
+
+<div class="card">
+
+
+<h3>
+🔔 Notifications History
+</h3>
+
+
+
+{% if notifications %}
+
+
+
+{% for n in notifications %}
+
+
+<div class="stat-card">
+
+
+<div class="stat-label">
+
+{{ n.level }}
+
+</div>
+
+
+
+<div class="stat-value">
+
+{{ n.title }}
+
+</div>
+
+
+
+<p>
+
+{{ n.message }}
+
+</p>
+
+
+
+<small>
+
+{{ n.created_at }}
+
+</small>
+
+
+</div>
+
+
+<br>
+
+
+
+{% endfor %}
+
+
+
+{% else %}
+
+
+<div class="stat-value">
+
+No Notifications
+
+</div>
+
+
+
+{% endif %}
+
+
+
+</div>
+
+
+
+{% endblock %}
