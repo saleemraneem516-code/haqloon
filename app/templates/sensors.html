@@ -268,6 +268,16 @@ Live rover sensor readings and stored history
         </div>
     </div>
 
+
+    <div class="stat-card">
+        <div class="stat-label">
+            MPU6050 — IMU
+        </div>
+
+        <div id="imu-value" class="stat-value">
+            🧭 Offline
+        </div>
+    </div>
 </div>
 
 
@@ -558,6 +568,11 @@ Live rover sensor readings and stored history
                     "lidar-value"
                 );
 
+            const imuElement =
+                document.getElementById(
+                    "imu-value"
+                );
+
             const lastUpdateElement =
                 document.getElementById(
                     "last-update-value"
@@ -667,6 +682,9 @@ Live rover sensor readings and stored history
                     lidar:
                         source.lidar ?? null,
 
+                    imu:
+                        source.imu ?? null,
+
                     created_at:
                         createdAt
                 };
@@ -684,7 +702,8 @@ Live rover sensor readings and stored history
                     reading.temperature !== null ||
                     reading.humidity !== null ||
                     reading.distance !== null ||
-                    reading.lidar !== null
+                    reading.lidar !== null ||
+                    reading.imu !== null
                 );
 
             }
@@ -819,6 +838,30 @@ Live rover sensor readings and stored history
                         "mm",
                         "📡"
                     );
+
+                if (reading.imu) {
+                    const imu = reading.imu;
+
+                    const formatImuValue = function (value) {
+                        const number = Number(value);
+                        return Number.isFinite(number)
+                            ? number.toFixed(3)
+                            : "—";
+                    };
+
+                    imuElement.innerHTML =
+                        `🧭 Gyro (rad/s): ` +
+                        `X ${formatImuValue(imu.gyro_x)}, ` +
+                        `Y ${formatImuValue(imu.gyro_y)}, ` +
+                        `Z ${formatImuValue(imu.gyro_z)}` +
+                        `<br>` +
+                        `Accel (m/s²): ` +
+                        `X ${formatImuValue(imu.accel_x)}, ` +
+                        `Y ${formatImuValue(imu.accel_y)}, ` +
+                        `Z ${formatImuValue(imu.accel_z)}`;
+                } else {
+                    imuElement.textContent = "🧭 Offline";
+                }
 
                 lastUpdateElement.textContent =
                     `🕒 ${

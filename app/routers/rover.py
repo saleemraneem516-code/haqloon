@@ -242,6 +242,15 @@ latest_data = {
         "distance": "Offline",
         "lidar": "Offline",
 
+        "imu": {
+            "gyro_x": None,
+            "gyro_y": None,
+            "gyro_z": None,
+            "accel_x": None,
+            "accel_y": None,
+            "accel_z": None,
+        },
+
     },
 
     "lidar_map": [],
@@ -293,6 +302,14 @@ class RoverData(BaseModel):
     humidity: float | None = None
     distance: float | None = None
     lidar: float | None = None
+
+    # MPU6050 / IMU
+    gyro_x: float | None = None
+    gyro_y: float | None = None
+    gyro_z: float | None = None
+    accel_x: float | None = None
+    accel_y: float | None = None
+    accel_z: float | None = None
 
     # LiDAR map points
     lidar_points: list | None = None
@@ -355,6 +372,28 @@ async def receive_data(
         latest_data["sensors"]["lidar"] = (
             data.lidar
         )
+
+    # ==================================================
+    # Update MPU6050 / IMU Values
+    # ==================================================
+
+    if data.gyro_x is not None:
+        latest_data["sensors"]["imu"]["gyro_x"] = data.gyro_x
+
+    if data.gyro_y is not None:
+        latest_data["sensors"]["imu"]["gyro_y"] = data.gyro_y
+
+    if data.gyro_z is not None:
+        latest_data["sensors"]["imu"]["gyro_z"] = data.gyro_z
+
+    if data.accel_x is not None:
+        latest_data["sensors"]["imu"]["accel_x"] = data.accel_x
+
+    if data.accel_y is not None:
+        latest_data["sensors"]["imu"]["accel_y"] = data.accel_y
+
+    if data.accel_z is not None:
+        latest_data["sensors"]["imu"]["accel_z"] = data.accel_z
 
     # ==================================================
     # Save Sensor Data
@@ -633,6 +672,12 @@ async def receive_data(
         or data.camera is not None
         or data.image is not None
         or data.ai_result is not None
+        or data.gyro_x is not None
+        or data.gyro_y is not None
+        or data.gyro_z is not None
+        or data.accel_x is not None
+        or data.accel_y is not None
+        or data.accel_z is not None
 
     )
 
@@ -659,6 +704,12 @@ async def receive_data(
         data.temperature is not None
         or data.humidity is not None
         or data.distance is not None
+        or data.gyro_x is not None
+        or data.gyro_y is not None
+        or data.gyro_z is not None
+        or data.accel_x is not None
+        or data.accel_y is not None
+        or data.accel_z is not None
 
     )
 
