@@ -285,6 +285,30 @@ No Image
 
 
 
+
+
+<div class="stat-card" id="imu">
+
+<div class="stat-label">
+MPU6050 / IMU
+</div>
+
+
+<div class="stat-value signal" id="imu_status">
+🔴 Offline
+</div>
+
+
+<div class="stat-value" id="imu_value">
+Gyro: -- / -- / --<br>
+Accel: -- / -- / --
+</div>
+
+
+</div>
+
+
+
 </div>
 
 
@@ -296,6 +320,11 @@ No Image
 
 <a class="btn btn-ghost" href="/sensors">
 Sensor Data
+</a>
+
+
+<a class="btn btn-ghost" href="/sensors#imu">
+MPU6050 / IMU
 </a>
 
 
@@ -569,6 +598,64 @@ socket.onmessage = (event) => {
 
 
 
+
+    // =======================
+    // MPU6050 / IMU
+    // =======================
+
+    if (
+        data.sensors &&
+        data.sensors.imu &&
+        (
+            data.sensors.imu.gyro_x !== null ||
+            data.sensors.imu.gyro_y !== null ||
+            data.sensors.imu.gyro_z !== null ||
+            data.sensors.imu.accel_x !== null ||
+            data.sensors.imu.accel_y !== null ||
+            data.sensors.imu.accel_z !== null
+        )
+    ) {
+
+        const imu = data.sensors.imu;
+
+        const fmt = (value) => {
+            const number = Number(value);
+            return Number.isFinite(number)
+                ? number.toFixed(3)
+                : "--";
+        };
+
+        document.getElementById(
+            "imu_status"
+        ).innerHTML =
+            "🟢 Online";
+
+
+        document.getElementById(
+            "imu_value"
+        ).innerHTML =
+            `Gyro (rad/s): X ${fmt(imu.gyro_x)}, Y ${fmt(imu.gyro_y)}, Z ${fmt(imu.gyro_z)}<br>` +
+            `Accel (m/s²): X ${fmt(imu.accel_x)}, Y ${fmt(imu.accel_y)}, Z ${fmt(imu.accel_z)}`;
+
+    }
+    else {
+
+        document.getElementById(
+            "imu_status"
+        ).innerHTML =
+            "🔴 Offline";
+
+
+        document.getElementById(
+            "imu_value"
+        ).innerHTML =
+            "Gyro: -- / -- / --<br>Accel: -- / -- / --";
+
+    }
+
+
+
+
 // =======================
 // GPS Neo 6M
 // =======================
@@ -584,21 +671,6 @@ if (data.gps) {
     }
 
 }
-
-if (gpsLocation) {
-
-    document.getElementById("gps_status").innerHTML = "🟢 Online";
-    document.getElementById("gps_value").innerHTML = gpsLocation;
-
-} else {
-
-    document.getElementById("gps_status").innerHTML = "🔴 Offline";
-    document.getElementById("gps_value").innerHTML = "Waiting for GPS...";
-
-
-}
-
-
 
 if(gpsLocation){
 

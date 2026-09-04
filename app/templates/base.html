@@ -24,11 +24,13 @@
           <div class="nav-group-label">Operations</div>
           <a class="nav-link {% if active == 'dashboard' %}active{% endif %}" href="/dashboard"><span class="dot"></span>Dashboard</a>
           <a class="nav-link {% if active == 'sensors' %}active{% endif %}" href="/sensors"><span class="dot"></span>Sensor Data</a>
+          <a class="nav-link {% if active == 'sensors' %}active{% endif %}" href="/sensors#imu"><span class="dot"></span>MPU6050 / IMU</a>
           <a class="nav-link {% if active == 'camera' %}active{% endif %}" href="/camera"><span class="dot"></span>Camera</a>
           <a class="nav-link {% if active == 'gps' %}active{% endif %}" href="/gps"><span class="dot"></span>GPS</a>
           <a class="nav-link {% if active == 'ai-detection' %}active{% endif %}" href="/ai-detection"><span class="dot"></span>AI Detection</a>
           <a class="nav-link {% if active == 'rover' %}active{% endif %}" href="/rover"><span class="dot"></span>Rover Controls</a>
-          <a class="nav-link {% if active == 'lidar' %}active{% endif %}" href="/lidar"><span class="dot"></span>LiDAR Map</a>        </div>
+          <a class="nav-link {% if active == 'lidar' %}active{% endif %}" href="/lidar"><span class="dot"></span>LiDAR Map</a>
+        </div>
 
         <div class="nav-group">
           <div class="nav-group-label">Alerts</div>
