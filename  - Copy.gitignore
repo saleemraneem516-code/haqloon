@@ -1,6 +1,0 @@
-__pycache__/
-*.pyc
-haqloon.db
-.venv/
-app/static/uploads/*
-!app/static/uploads/default.svg
