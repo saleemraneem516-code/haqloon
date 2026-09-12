@@ -1,9 +1,15 @@
-# HAQLOON — Authentication & User Management System
+# HAQLOON Autonomous Agricultural Rover Platform
 
-A complete authentication, authorization, and user-management system built with
-FastAPI, session cookies, bcrypt password hashing, and role-based access control
-(RBAC). Includes a styled login/welcome/goodbye flow, a self-service profile
-page, and a full admin panel for managing users.
+HAQLOON is a FastAPI monitoring and management platform for an autonomous
+agricultural rover. It combines secure user management with live sensor status,
+camera monitoring, GPS tracking, LiDAR visualization, AI detection, rover
+controls, alerts, and notifications.
+
+## Platform Preview
+
+![HAQLOON connected dashboard](docs/images/dashboard-connected.png)
+
+![HAQLOON LiDAR map](docs/images/lidar-map.png)
 
 ## Features
 
@@ -32,15 +38,16 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
 
-Then open `http://127.0.0.1:8000`. A default administrator is created on
-first run:
+Then open `http://127.0.0.1:8000`. For local development, a default
+administrator is created on first run:
 
 | Username | Password       |
 |----------|----------------|
 | `admin`  | `Admin@12345`  |
 
-**Change this password immediately** after your first login (Profile page or
-Admin → Reset Password).
+**Change this password immediately.** For deployment, copy `.env.example` to
+`.env` and configure `HAQLOON_SECRET_KEY`, `HAQLOON_ADMIN_USERNAME`,
+`HAQLOON_ADMIN_EMAIL`, and `HAQLOON_ADMIN_PASSWORD`. Never commit `.env`.
 
 ## Project layout
 
@@ -105,7 +112,7 @@ level, so a direct URL visit still redirects them away.
 
 ## Notes on the operational pages
 
-`/sensors`, `/camera`, `/gps`, `/ai-detection`, `/rover`, `/notifications`,
-and `/alerts` are wired up as access-controlled placeholders — the routing,
-auth checks, and layout are in place, ready for you to connect real
-telemetry, video, and rover-control integrations behind them.
+Operational routes include `/sensors`, `/camera`, `/gps`, `/ai-detection`,
+`/rover`, `/lidar`, `/notifications`, and `/alerts`. The application accepts
+rover telemetry through its backend routes and presents the latest available
+state through access-controlled pages.

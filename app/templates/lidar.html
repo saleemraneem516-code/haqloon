@@ -4,62 +4,67 @@
 LiDAR Map
 {% endblock %}
 
+
 {% block page_heading %}
 LiDAR Map
 {% endblock %}
+
 
 {% block page_sub %}
 360° RPLIDAR A1 Mapping
 {% endblock %}
 
+
+
 {% block content %}
+
 
 <div class="stat-card">
 
-    <h2>Live LiDAR Map</h2>
+<h2>
+Live LiDAR Map
+</h2>
 
-    <canvas
-        id="lidarCanvas"
-        width="600"
-        height="600"
-        style="border:2px solid red;">
-    </canvas>
+
+<canvas
+id="lidarCanvas"
+width="600"
+height="600"
+style="border:2px solid red;">
+</canvas>
+
 
 </div>
 
+
+
 <script>
 
-async function loadLidar() {
+async function loadLidar(){
 
-    try {
+    const response = await fetch("/api/lidar");
 
-        const response = await fetch("/api/lidar");
+    const data = await response.json();
 
-        if (!response.ok) {
-            throw new Error("HTTP " + response.status);
-        }
+    console.log("LIDAR DATA:", data);
 
-        const data = await response.json();
 
-        console.log("LIDAR DATA:", data);
+    drawLidar(data.points);
 
-        drawLidar(data.points || []);
-
-    } catch (error) {
-
-        console.error("LiDAR error:", error);
-
-    }
 }
 
 
-function drawLidar(points) {
+
+function drawLidar(points){
 
     const canvas =
-        document.getElementById("lidarCanvas");
+    document.getElementById(
+        "lidarCanvas"
+    );
+
 
     const ctx =
-        canvas.getContext("2d");
+    canvas.getContext("2d");
 
 
     ctx.clearRect(
@@ -70,162 +75,59 @@ function drawLidar(points) {
     );
 
 
-    const cx = canvas.width / 2;
-    const cy = canvas.height / 2;
-
-    /*
-     * LiDAR coordinates are in meters.
-     * 1 meter = 100 pixels.
-     */
-    const scale = 100;
+    const cx =
+    canvas.width / 2;
 
 
-    /*
-     * Grid
-     */
-
-    ctx.strokeStyle = "#334155";
-    ctx.lineWidth = 1;
-
-    for (let r = 50; r <= 250; r += 50) {
-
-        ctx.beginPath();
-
-        ctx.arc(
-            cx,
-            cy,
-            r,
-            0,
-            Math.PI * 2
-        );
-
-        ctx.stroke();
-    }
+    const cy =
+    canvas.height / 2;
 
 
-    /*
-     * Center / Rover
-     */
 
-    ctx.fillStyle = "#ffffff";
-
-    ctx.beginPath();
-
-    ctx.arc(
-        cx,
-        cy,
-        5,
-        0,
-        Math.PI * 2
-    );
-
-    ctx.fill();
+    points.forEach(p => {
 
 
-    /*
-     * LiDAR points
-     */
-
-    ctx.fillStyle = "#00ff88";
-
-    points.forEach(function (p) {
-
-        let x;
-        let y;
+        const x =
+        cx + p[0];
 
 
-        /*
-         * Format:
-         * {x: ..., y: ...}
-         */
+        const y =
+        cy - p[1];
 
-        if (
-            p !== null &&
-            typeof p === "object" &&
-            !Array.isArray(p)
-        ) {
-
-            x = Number(p.x);
-            y = Number(p.y);
-
-        }
-
-
-        /*
-         * Also support:
-         * [x, y]
-         */
-
-        else if (Array.isArray(p)) {
-
-            x = Number(p[0]);
-            y = Number(p[1]);
-
-        }
-
-
-        if (
-            !Number.isFinite(x) ||
-            !Number.isFinite(y)
-        ) {
-
-            return;
-
-        }
-
-
-        const canvasX =
-            cx + (x * scale);
-
-        const canvasY =
-            cy - (y * scale);
-
-
-        if (
-            canvasX < 0 ||
-            canvasX > canvas.width ||
-            canvasY < 0 ||
-            canvasY > canvas.height
-        ) {
-
-            return;
-
-        }
 
 
         ctx.beginPath();
 
+
         ctx.arc(
-            canvasX,
-            canvasY,
-            2,
+            x,
+            y,
+            4,
             0,
             Math.PI * 2
         );
+
 
         ctx.fill();
 
+
     });
+
 
 }
 
 
-/*
- * Load immediately
- */
 
 loadLidar();
 
-
-/*
- * Update every 3 seconds
- */
 
 setInterval(
     loadLidar,
     3000
 );
 
+
 </script>
+
 
 {% endblock %}

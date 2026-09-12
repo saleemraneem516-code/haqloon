@@ -19,8 +19,7 @@ from .routers import (
     ai_detection,
     control,
     notifications,
-    lidar,
-    ros2
+    lidar
 )
 
 from .security import hash_password
@@ -108,7 +107,7 @@ app.include_router(control.router)
 app.include_router(notifications.router)
 
 app.include_router(lidar.router)
-app.include_router(ros2.router)
+
 
 # ==============================
 # Startup
@@ -135,11 +134,15 @@ def create_default_admin():
 
     try:
 
+        admin_username = os.environ.get("HAQLOON_ADMIN_USERNAME", "admin")
+        admin_email = os.environ.get("HAQLOON_ADMIN_EMAIL", "admin@haqloon.local")
+        admin_password = os.environ.get("HAQLOON_ADMIN_PASSWORD", "Admin@12345")
+
         user_exists = (
             db.query(User)
             .filter(
-                (User.username == "admin") |
-                (User.email == "admin@haqloon.io")
+                (User.username == admin_username) |
+                (User.email == admin_email)
             )
             .first()
         )
@@ -151,12 +154,12 @@ def create_default_admin():
 
                 full_name="System Administrator",
 
-                username="admin",
+                username=admin_username,
 
-                email="admin@haqloon.io",
+                email=admin_email,
 
                 password_hash=hash_password(
-                    "Admin@12345"
+                    admin_password
                 ),
 
                 role="admin",
